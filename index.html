@@ -1,0 +1,969 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --stone:#F5F2EE;--stone-2:#EDE9E3;--stone-3:#DDD8D0;
+  --ink:#1A1714;--ink-2:#3D3A36;--ink-3:#6B6760;
+  --teal:#0B5E56;--teal-light:#E6F4F2;--teal-mid:#1A8078;
+  --gold:#C49A2C;--gold-light:#FBF4E0;
+  --brick:#9B3A2A;--brick-light:#FAEAE6;
+  --amber-warn:#D4821A;--amber-light:#FEF3E2;
+  --ff-display:'Fraunces',Georgia,serif;
+  --ff-body:'DM Sans',system-ui,sans-serif;
+  --radius:8px;--radius-lg:14px;
+}
+body{font-family:var(--ff-body);background:var(--stone);color:var(--ink);font-size:15px;line-height:1.6;min-height:100vh}
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column}
+
+/* NAV */
+nav{background:#fff;border-bottom:1px solid var(--stone-3);padding:0 2rem;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-logo{font-family:var(--ff-display);font-size:1.3rem;font-weight:500;color:var(--teal);letter-spacing:-0.02em;display:flex;align-items:center;gap:8px;cursor:pointer}
+.nav-logo span{font-family:var(--ff-body);font-size:.7rem;font-weight:500;background:var(--teal-light);color:var(--teal);padding:2px 8px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase}
+.nav-links{display:flex;gap:1.5rem;align-items:center}
+.nav-link{font-size:.875rem;color:var(--ink-2);cursor:pointer;padding:4px 0;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--teal)}
+.nav-link.active{color:var(--teal);border-bottom-color:var(--teal)}
+.nav-badge{font-size:.7rem;font-weight:500;padding:2px 8px;border-radius:20px;margin-left:4px}
+.badge-doctor{background:var(--teal-light);color:var(--teal)}
+.badge-patient{background:var(--gold-light);color:var(--gold)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius);font-family:var(--ff-body);font-size:.875rem;font-weight:500;cursor:pointer;border:none;transition:all .15s;text-decoration:none}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:var(--teal-mid)}
+.btn-outline{background:#fff;color:var(--teal);border:1.5px solid var(--teal)}
+.btn-outline:hover{background:var(--teal-light)}
+.btn-ghost{background:transparent;color:var(--ink-2);border:1px solid var(--stone-3)}
+.btn-ghost:hover{background:var(--stone-2)}
+.btn-sm{padding:6px 14px;font-size:.8rem}
+.btn-danger{background:var(--brick);color:#fff}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--stone-3);border-radius:var(--radius-lg);padding:1.25rem}
+.card-sm{padding:1rem}
+.metric-card{background:#fff;border:1px solid var(--stone-3);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:4px}
+.metric-val{font-family:var(--ff-display);font-size:2rem;font-weight:400;color:var(--ink);line-height:1}
+.metric-lbl{font-size:.75rem;font-weight:500;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+.metric-sub{font-size:.8rem;color:var(--ink-3);margin-top:2px}
+
+/* FORM */
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem}
+.form-label{font-size:.8rem;font-weight:500;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em}
+.form-input{padding:9px 12px;border:1px solid var(--stone-3);border-radius:var(--radius);font-family:var(--ff-body);font-size:.9rem;background:#fff;color:var(--ink);outline:none;transition:border .15s}
+.form-input:focus{border-color:var(--teal)}
+.form-hint{font-size:.75rem;color:var(--ink-3)}
+select.form-input{cursor:pointer}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:500;padding:3px 10px;border-radius:20px;letter-spacing:.03em}
+.tag-teal{background:var(--teal-light);color:var(--teal)}
+.tag-gold{background:var(--gold-light);color:#8B6C1A}
+.tag-brick{background:var(--brick-light);color:var(--brick)}
+.tag-amber{background:var(--amber-light);color:var(--amber-warn)}
+.tag-low{background:#EAF5EC;color:#1A6B2A}
+
+/* LAYOUT */
+.page-wrap{max-width:1100px;margin:0 auto;padding:2rem 2rem;flex:1}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.section-title{font-family:var(--ff-display);font-size:1.2rem;font-weight:400;color:var(--ink)}
+.page-title{font-family:var(--ff-display);font-size:1.75rem;font-weight:400;color:var(--ink);letter-spacing:-.02em}
+.page-sub{font-size:.9rem;color:var(--ink-3);margin-top:4px}
+.divider{height:1px;background:var(--stone-2);margin:1.5rem 0}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-lg);border:1px solid var(--stone-3)}
+table{width:100%;border-collapse:collapse;background:#fff}
+th{font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);padding:10px 14px;text-align:left;border-bottom:1px solid var(--stone-2)}
+td{padding:11px 14px;font-size:.875rem;border-bottom:1px solid var(--stone-2);color:var(--ink-2)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--stone)}
+
+/* QUANTUM CIRCUIT ANIMATION */
+@keyframes pulse-node{0%,100%{opacity:.4;r:5}50%{opacity:1;r:7}}
+@keyframes flow{0%{stroke-dashoffset:60}100%{stroke-dashoffset:0}}
+@keyframes glow-line{0%,100%{opacity:.2}50%{opacity:.8}}
+
+/* LANDING SPECIFIC */
+.hero{padding:5rem 2rem 4rem;max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.hero-tag{font-size:.72rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:1rem}
+.hero-title{font-family:var(--ff-display);font-size:3.2rem;font-weight:300;line-height:1.1;letter-spacing:-.03em;color:var(--ink)}
+.hero-title em{font-style:italic;color:var(--teal)}
+.hero-body{font-size:1rem;color:var(--ink-2);line-height:1.7;margin:1.5rem 0}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+
+.pipeline-section{background:var(--stone-2);padding:4rem 0}
+.pipeline-inner{max-width:1100px;margin:0 auto;padding:0 2rem}
+.pipeline-title{font-family:var(--ff-display);font-size:1.6rem;font-weight:400;text-align:center;margin-bottom:.5rem}
+.pipeline-sub{text-align:center;color:var(--ink-3);margin-bottom:3rem;font-size:.9rem}
+.pipeline-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.pipeline-step{background:#fff;border-radius:var(--radius-lg);padding:1.5rem;border:1px solid var(--stone-3);position:relative}
+.step-num{font-family:var(--ff-display);font-size:2.5rem;font-weight:300;color:var(--stone-3);line-height:1;margin-bottom:.75rem}
+.step-label{font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+.step-title{font-family:var(--ff-display);font-size:1.1rem;font-weight:400;margin-bottom:.5rem}
+.step-body{font-size:.83rem;color:var(--ink-3);line-height:1.6}
+
+.trust-bar{padding:2rem 0;background:#fff;border-top:1px solid var(--stone-2);border-bottom:1px solid var(--stone-2)}
+.trust-inner{max-width:1100px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;gap:3rem}
+.trust-label{font-size:.75rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;font-weight:500;white-space:nowrap}
+.trust-divider{width:1px;height:24px;background:var(--stone-3)}
+.trust-logos{display:flex;gap:2rem;align-items:center;flex-wrap:wrap}
+.trust-logo{font-family:var(--ff-display);font-size:.95rem;font-weight:400;color:var(--ink-2)}
+
+/* AUTH */
+.auth-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--stone)}
+.auth-card{background:#fff;border:1px solid var(--stone-3);border-radius:var(--radius-lg);padding:2.5rem;width:100%;max-width:420px}
+.auth-eyebrow{font-size:.72rem;font-weight:500;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+.auth-title{font-family:var(--ff-display);font-size:1.6rem;font-weight:400;margin-bottom:.25rem}
+.auth-sub{font-size:.85rem;color:var(--ink-3);margin-bottom:1.75rem}
+.role-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:1.5rem;background:var(--stone);padding:4px;border-radius:var(--radius)}
+.role-tab{padding:8px;text-align:center;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;color:var(--ink-3);transition:all .15s}
+.role-tab.active{background:#fff;color:var(--teal);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.auth-switch{text-align:center;font-size:.82rem;color:var(--ink-3);margin-top:1.25rem}
+.auth-switch a{color:var(--teal);cursor:pointer}
+
+/* RESULTS */
+.result-hero{background:linear-gradient(135deg,var(--teal) 0%,#0B4A44 100%);border-radius:var(--radius-lg);padding:1.75rem;color:#fff;margin-bottom:1.5rem}
+.result-condition{font-family:var(--ff-display);font-size:2rem;font-weight:400;margin-bottom:.25rem}
+.result-sub{opacity:.8;font-size:.875rem}
+.confidence-row{display:flex;gap:1.5rem;margin-top:1.25rem}
+.conf-item{flex:1;background:rgba(255,255,255,.12);border-radius:var(--radius);padding:.875rem}
+.conf-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:.25rem}
+.conf-val{font-family:var(--ff-display);font-size:1.5rem;font-weight:400}
+.conf-model{font-size:.72rem;opacity:.6;margin-top:2px}
+.quantum-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(196,154,44,.25);border:1px solid rgba(196,154,44,.4);color:#F5CC6A;padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:500;margin-top:.75rem}
+
+.shap-bar{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.shap-label{font-size:.8rem;color:var(--ink-2);width:140px;flex-shrink:0;text-align:right}
+.shap-track{flex:1;height:8px;background:var(--stone-2);border-radius:4px;overflow:hidden}
+.shap-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.shap-val{font-size:.75rem;color:var(--ink-3);width:38px;text-align:right}
+
+/* RECOMMENDATION CARDS */
+.rec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+.rec-card{background:#fff;border:1px solid var(--stone-3);border-radius:var(--radius-lg);padding:1.25rem}
+.rec-icon{width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:.75rem}
+.rec-title{font-weight:500;font-size:.9rem;margin-bottom:.4rem;color:var(--ink)}
+.rec-body{font-size:.8rem;color:var(--ink-3);line-height:1.55}
+
+/* PATIENT */
+.risk-meter{width:100%;height:12px;border-radius:6px;background:linear-gradient(90deg,#2A9D5C 0%,#E9C46A 45%,#E76F51 80%,#9B3A2A 100%);margin-bottom:.5rem;position:relative}
+.risk-needle{position:absolute;top:-4px;width:4px;height:20px;background:var(--ink);border-radius:2px;transform:translateX(-50%);transition:left .8s ease}
+
+/* SIDEBAR NAV (dashboard) */
+.dash-layout{display:flex;flex:1;gap:0}
+.sidebar{width:200px;flex-shrink:0;background:#fff;border-right:1px solid var(--stone-3);padding:1.5rem 0}
+.sidebar-item{display:flex;align-items:center;gap:9px;padding:9px 1.25rem;font-size:.85rem;color:var(--ink-2);cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.sidebar-item:hover{background:var(--stone);color:var(--ink)}
+.sidebar-item.active{color:var(--teal);border-left-color:var(--teal);background:var(--teal-light)}
+.sidebar-icon{width:16px;text-align:center;font-size:.9rem}
+.sidebar-section{font-size:.65rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);padding:12px 1.25rem 4px}
+.dash-main{flex:1;padding:2rem;overflow:auto;background:var(--stone)}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--ink);color:#fff;padding:.75rem 1.25rem;border-radius:var(--radius);font-size:.85rem;display:none;z-index:999;max-width:300px;line-height:1.4}
+.toast.show{display:block;animation:slideUp .2s ease}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* MISC */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--ink-3)}
+.empty-icon{font-size:2rem;margin-bottom:.75rem}
+.empty-title{font-family:var(--ff-display);font-size:1.1rem;color:var(--ink);margin-bottom:.4rem}
+.empty-body{font-size:.85rem}
+.tab-row{display:flex;gap:0;border-bottom:1px solid var(--stone-3);margin-bottom:1.5rem}
+.tab-btn{padding:9px 16px;font-size:.85rem;font-weight:500;color:var(--ink-3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal)}
+.progress-bar{height:6px;background:var(--stone-2);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;background:var(--teal)}
+
+.circuit-svg{width:100%;max-height:260px}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- LANDING -->
+<div id="screen-landing" class="screen active">
+  <nav>
+    <div class="nav-logo" onclick="go('landing')">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#0B5E56" stroke-width="1.5"/><circle cx="11" cy="7" r="2" fill="#0B5E56"/><circle cx="7" cy="15" r="2" fill="#0B5E56"/><circle cx="15" cy="15" r="2" fill="#0B5E56"/><line x1="11" y1="9" x2="7" y2="13" stroke="#C49A2C" stroke-width="1.2"/><line x1="11" y1="9" x2="15" y2="13" stroke="#C49A2C" stroke-width="1.2"/></svg>
+      QMedAI <span>Quantum</span>
+    </div>
+    <div class="nav-links">
+      <span class="nav-link" onclick="go('login')">Sign in</span>
+      <button class="btn btn-primary btn-sm" onclick="go('login')">Get started</button>
+    </div>
+  </nav>
+
+  <section style="flex:1">
+    <div class="hero">
+      <div>
+        <div class="hero-tag">Quantum-Assisted Diagnostics</div>
+        <h1 class="hero-title">Medicine that<br>thinks in <em>qubits</em></h1>
+        <p class="hero-body">QMedAI fuses classical machine learning, IBM Qiskit quantum kernels, and SHAP explainability into a single diagnostic pipeline — giving clinicians predictions they can trust and trace.</p>
+        <div class="hero-btns">
+          <button class="btn btn-primary" onclick="go('login')">Start a diagnosis</button>
+          <button class="btn btn-outline" onclick="go('login')">View patient portal</button>
+        </div>
+      </div>
+      <div>
+        <svg class="circuit-svg" viewBox="0 0 360 260" xmlns="http://www.w3.org/2000/svg">
+          <rect width="360" height="260" fill="#EDE9E3" rx="14"/>
+          <!-- qubit lines -->
+          <line x1="40" y1="70" x2="320" y2="70" stroke="#DDD8D0" stroke-width="1.5"/>
+          <line x1="40" y1="130" x2="320" y2="130" stroke="#DDD8D0" stroke-width="1.5"/>
+          <line x1="40" y1="190" x2="320" y2="190" stroke="#DDD8D0" stroke-width="1.5"/>
+          <!-- labels -->
+          <text x="15" y="74" font-family="DM Sans" font-size="9" fill="#6B6760">q₀</text>
+          <text x="15" y="134" font-family="DM Sans" font-size="9" fill="#6B6760">q₁</text>
+          <text x="15" y="194" font-family="DM Sans" font-size="9" fill="#6B6760">q₂</text>
+          <!-- H gates -->
+          <rect x="55" y="58" width="28" height="24" rx="4" fill="#fff" stroke="#0B5E56" stroke-width="1.2"/>
+          <text x="69" y="74" font-family="DM Sans" font-size="10" fill="#0B5E56" text-anchor="middle" font-weight="500">H</text>
+          <rect x="55" y="118" width="28" height="24" rx="4" fill="#fff" stroke="#0B5E56" stroke-width="1.2"/>
+          <text x="69" y="134" font-family="DM Sans" font-size="10" fill="#0B5E56" text-anchor="middle" font-weight="500">H</text>
+          <rect x="55" y="178" width="28" height="24" rx="4" fill="#fff" stroke="#0B5E56" stroke-width="1.2"/>
+          <text x="69" y="194" font-family="DM Sans" font-size="10" fill="#0B5E56" text-anchor="middle" font-weight="500">H</text>
+          <!-- CNOT -->
+          <circle cx="130" cy="70" r="6" fill="#C49A2C"/>
+          <line x1="130" y1="76" x2="130" y2="124" stroke="#C49A2C" stroke-width="1.2" stroke-dasharray="4 2">
+            <animate attributeName="stroke-dashoffset" from="60" to="0" dur="2s" repeatCount="indefinite"/>
+          </line>
+          <circle cx="130" cy="130" r="9" fill="none" stroke="#C49A2C" stroke-width="1.5"/>
+          <line x1="121" y1="130" x2="139" y2="130" stroke="#C49A2C" stroke-width="1.5"/>
+          <line x1="130" y1="121" x2="130" y2="139" stroke="#C49A2C" stroke-width="1.5"/>
+          <!-- CNOT 2 -->
+          <circle cx="180" cy="130" r="6" fill="#0B5E56"/>
+          <line x1="180" y1="136" x2="180" y2="184" stroke="#0B5E56" stroke-width="1.2" stroke-dasharray="4 2">
+            <animate attributeName="stroke-dashoffset" from="60" to="0" dur="2.5s" repeatCount="indefinite"/>
+          </line>
+          <circle cx="180" cy="190" r="9" fill="none" stroke="#0B5E56" stroke-width="1.5"/>
+          <line x1="171" y1="190" x2="189" y2="190" stroke="#0B5E56" stroke-width="1.5"/>
+          <line x1="180" y1="181" x2="180" y2="199" stroke="#0B5E56" stroke-width="1.5"/>
+          <!-- RZ gates -->
+          <rect x="215" y="58" width="32" height="24" rx="4" fill="#fff" stroke="#9B3A2A" stroke-width="1.2"/>
+          <text x="231" y="74" font-family="DM Sans" font-size="9" fill="#9B3A2A" text-anchor="middle" font-weight="500">Rz(θ)</text>
+          <rect x="215" y="118" width="32" height="24" rx="4" fill="#fff" stroke="#9B3A2A" stroke-width="1.2"/>
+          <text x="231" y="134" font-family="DM Sans" font-size="9" fill="#9B3A2A" text-anchor="middle" font-weight="500">Rz(θ)</text>
+          <!-- measure -->
+          <rect x="275" y="58" width="30" height="24" rx="4" fill="#F5F2EE" stroke="#6B6760" stroke-width="1"/>
+          <text x="290" y="74" font-family="DM Sans" font-size="9" fill="#6B6760" text-anchor="middle">M</text>
+          <rect x="275" y="118" width="30" height="24" rx="4" fill="#F5F2EE" stroke="#6B6760" stroke-width="1"/>
+          <text x="290" y="134" font-family="DM Sans" font-size="9" fill="#6B6760" text-anchor="middle">M</text>
+          <rect x="275" y="178" width="30" height="24" rx="4" fill="#F5F2EE" stroke="#6B6760" stroke-width="1"/>
+          <text x="290" y="194" font-family="DM Sans" font-size="9" fill="#6B6760" text-anchor="middle">M</text>
+          <!-- pulsing nodes -->
+          <circle cx="130" cy="70" r="5" fill="#C49A2C" opacity=".7">
+            <animate attributeName="opacity" values=".4;1;.4" dur="1.8s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="180" cy="130" r="5" fill="#0B5E56" opacity=".7">
+            <animate attributeName="opacity" values=".4;1;.4" dur="2.2s" repeatCount="indefinite"/>
+          </circle>
+          <!-- label -->
+          <text x="180" y="242" font-family="Fraunces" font-size="10" fill="#6B6760" text-anchor="middle" font-style="italic">Quantum Feature Map — 3 qubit QSVC kernel</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="trust-bar">
+      <div class="trust-inner">
+        <span class="trust-label">Built with</span>
+        <div class="trust-divider"></div>
+        <div class="trust-logos">
+          <span class="trust-logo">IBM Qiskit</span>
+          <span class="trust-logo">SHAP / LIME</span>
+          <span class="trust-logo">FastAPI</span>
+          <span class="trust-logo">Next.js</span>
+          <span class="trust-logo">PostgreSQL</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-section">
+      <div class="pipeline-inner">
+        <p class="pipeline-title">Three-layer diagnostic engine</p>
+        <p class="pipeline-sub">Each prediction passes through all three stages. Every output is traceable.</p>
+        <div class="pipeline-steps">
+          <div class="pipeline-step">
+            <div class="step-num">01</div>
+            <div class="step-label" style="color:var(--teal)">Classical ML</div>
+            <div class="step-title">Risk classification</div>
+            <div class="step-body">A gradient boosted classifier processes patient vitals, history, and lifestyle data to produce an initial risk profile and confidence estimate.</div>
+          </div>
+          <div class="pipeline-step">
+            <div class="step-num">02</div>
+            <div class="step-label" style="color:var(--gold)">Quantum ML</div>
+            <div class="step-title">Kernel augmentation</div>
+            <div class="step-body">IBM Qiskit's QSVC and VQC models re-evaluate the feature vector on a quantum kernel, surfacing non-linear patterns classical models miss.</div>
+          </div>
+          <div class="pipeline-step">
+            <div class="step-num">03</div>
+            <div class="step-label" style="color:var(--brick)">Explainable AI</div>
+            <div class="step-title">SHAP + LIME analysis</div>
+            <div class="step-body">Every prediction is explained at the feature level — clinicians see which biomarkers drove the result; patients receive a plain-language summary.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#fff;padding:3rem 0;border-top:1px solid var(--stone-2)">
+      <div style="max-width:480px;margin:0 auto;text-align:center;padding:0 2rem">
+        <p style="font-family:var(--ff-display);font-size:1.5rem;font-weight:400;margin-bottom:.5rem">Ready to run a diagnosis?</p>
+        <p style="font-size:.875rem;color:var(--ink-3);margin-bottom:1.5rem">Doctors and clinicians can access the full dashboard. Patients can view their own results and care plans.</p>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn btn-primary" onclick="go('login')">Sign in as doctor</button>
+          <button class="btn btn-ghost" onclick="setRole('patient');go('login')">Patient portal</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-eyebrow">QMedAI</div>
+      <h2 class="auth-title">Sign in</h2>
+      <p class="auth-sub">Continue to your diagnostic dashboard</p>
+      <div class="role-tabs">
+        <div class="role-tab active" id="tab-doctor" onclick="selectRole('doctor')">Doctor / Admin</div>
+        <div class="role-tab" id="tab-patient" onclick="selectRole('patient')">Patient</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" placeholder="your@hospital.org" id="login-email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" placeholder="••••••••" id="login-password">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="doLogin()">Sign in</button>
+      <div class="auth-switch">No account? <a onclick="go('register')">Create one</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="screen-register" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-eyebrow">QMedAI</div>
+      <h2 class="auth-title">Create account</h2>
+      <p class="auth-sub">Join as a clinician or patient</p>
+      <div class="role-tabs">
+        <div class="role-tab active" id="rtab-doctor" onclick="selectRole('doctor','r')">Doctor</div>
+        <div class="role-tab" id="rtab-patient" onclick="selectRole('patient','r')">Patient</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full name</label>
+        <input class="form-input" placeholder="Dr. Priya Sharma">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" placeholder="your@hospital.org">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" placeholder="min 8 characters">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="doRegister()">Create account</button>
+      <div class="auth-switch">Already have an account? <a onclick="go('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- DOCTOR DASHBOARD -->
+<div id="screen-doctor" class="screen">
+  <nav>
+    <div class="nav-logo" onclick="go('landing')">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#0B5E56" stroke-width="1.5"/><circle cx="11" cy="7" r="2" fill="#0B5E56"/><circle cx="7" cy="15" r="2" fill="#0B5E56"/><circle cx="15" cy="15" r="2" fill="#0B5E56"/><line x1="11" y1="9" x2="7" y2="13" stroke="#C49A2C" stroke-width="1.2"/><line x1="11" y1="9" x2="15" y2="13" stroke="#C49A2C" stroke-width="1.2"/></svg>
+      QMedAI <span>Quantum</span>
+    </div>
+    <div class="nav-links">
+      <span class="nav-link">Dr. Priya Sharma</span>
+      <span class="tag tag-teal">Doctor</span>
+      <button class="btn btn-ghost btn-sm" onclick="go('landing')">Sign out</button>
+    </div>
+  </nav>
+  <div class="dash-layout">
+    <div class="sidebar">
+      <div class="sidebar-section">Clinical</div>
+      <div class="sidebar-item active" onclick="setDashTab('overview',this)"><span class="sidebar-icon">◎</span>Overview</div>
+      <div class="sidebar-item" onclick="setDashTab('predict',this)"><span class="sidebar-icon">⊕</span>New diagnosis</div>
+      <div class="sidebar-item" onclick="setDashTab('patients',this)"><span class="sidebar-icon">☰</span>Patient list</div>
+      <div class="sidebar-section">System</div>
+      <div class="sidebar-item" onclick="setDashTab('quantum',this)"><span class="sidebar-icon">⟨⟩</span>Quantum log</div>
+    </div>
+    <div class="dash-main">
+
+      <!-- OVERVIEW TAB -->
+      <div id="dashtab-overview">
+        <div class="section-head">
+          <div><div class="page-title">Clinical overview</div><div class="page-sub">Live metrics from the prediction engine</div></div>
+          <button class="btn btn-primary btn-sm" onclick="setDashTab('predict',document.querySelectorAll('.sidebar-item')[1])">+ New diagnosis</button>
+        </div>
+        <div class="grid-4" style="margin-bottom:1.5rem">
+          <div class="metric-card"><div class="metric-lbl">Total predictions</div><div class="metric-val" id="m-total">—</div></div>
+          <div class="metric-card"><div class="metric-lbl">Quantum augmented</div><div class="metric-val" id="m-quantum">—</div><div class="metric-sub" style="color:var(--teal);font-size:.72rem">QSVC + VQC</div></div>
+          <div class="metric-card"><div class="metric-lbl">High-risk flagged</div><div class="metric-val" id="m-risk" style="color:var(--brick)">—</div></div>
+          <div class="metric-card"><div class="metric-lbl">Avg confidence</div><div class="metric-val" id="m-conf">—</div></div>
+        </div>
+        <div class="grid-2-1">
+          <div class="card">
+            <div class="section-head"><span class="section-title">Prediction volume (30d)</span><span class="tag tag-teal">Live</span></div>
+            <div style="position:relative;height:220px"><canvas id="chart-volume" role="img" aria-label="Prediction volume chart">Monthly prediction volume data</canvas></div>
+          </div>
+          <div class="card">
+            <div class="section-title" style="margin-bottom:1rem">Model distribution</div>
+            <div style="position:relative;height:180px"><canvas id="chart-model" role="img" aria-label="Model distribution pie chart">Pie chart of model usage</canvas></div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:1rem">
+              <div style="display:flex;align-items:center;gap:8px;font-size:.78rem"><span style="width:10px;height:10px;border-radius:2px;background:#0B5E56;display:inline-block"></span>Classical GBM — 58%</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:.78rem"><span style="width:10px;height:10px;border-radius:2px;background:#C49A2C;display:inline-block"></span>Quantum QSVC — 31%</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:.78rem"><span style="width:10px;height:10px;border-radius:2px;background:#9B3A2A;display:inline-block"></span>Quantum VQC — 11%</div>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="section-head"><span class="section-title">Recent predictions</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Patient</th><th>Condition</th><th>Confidence</th><th>Model</th><th>Risk</th><th>Date</th><th></th></tr></thead>
+            <tbody id="recent-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PREDICT TAB -->
+      <div id="dashtab-predict" style="display:none">
+        <div class="section-head">
+          <div><div class="page-title">New diagnosis</div><div class="page-sub">Run the full quantum-assisted pipeline</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title" style="margin-bottom:1.25rem">Patient clinical metrics</div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Age</label>
+                <input class="form-input" type="number" id="f-age" placeholder="45" min="1" max="120">
+                <span class="form-hint">Years</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">BMI</label>
+                <input class="form-input" type="number" id="f-bmi" placeholder="24.5" step="0.1">
+                <span class="form-hint">kg/m²  · normal 18.5–24.9</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Systolic BP</label>
+                <input class="form-input" type="number" id="f-sys" placeholder="120" min="70" max="250">
+                <span class="form-hint">mmHg · normal &lt;120</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Diastolic BP</label>
+                <input class="form-input" type="number" id="f-dia" placeholder="80" min="40" max="150">
+                <span class="form-hint">mmHg · normal &lt;80</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Glucose level</label>
+                <input class="form-input" type="number" id="f-glucose" placeholder="95" min="50" max="400">
+                <span class="form-hint">mg/dL · fasting normal &lt;100</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">HbA1c</label>
+                <input class="form-input" type="number" id="f-hba1c" placeholder="5.4" step="0.1">
+                <span class="form-hint">% · normal &lt;5.7</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Patient ID</label>
+              <input class="form-input" id="f-pid" placeholder="e.g. PAT-2024-001">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Smoking status</label>
+              <select class="form-input" id="f-smoke">
+                <option value="">Select</option>
+                <option>Never</option><option>Former</option><option>Current</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" id="run-btn" onclick="runPrediction()">
+              Run quantum-assisted diagnosis
+            </button>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:1rem">
+              <div class="section-title" style="margin-bottom:.75rem">Pipeline stages</div>
+              <div id="pipeline-status">
+                <div class="pipeline-stage" id="stage-0" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--stone-2)">
+                  <div style="width:24px;height:24px;border-radius:50%;background:var(--stone-2);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--ink-3);flex-shrink:0">1</div>
+                  <div><div style="font-size:.85rem;font-weight:500">Classical ML</div><div style="font-size:.75rem;color:var(--ink-3)">Gradient boosted classifier</div></div>
+                  <div style="margin-left:auto" id="s0-status"></div>
+                </div>
+                <div class="pipeline-stage" id="stage-1" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--stone-2)">
+                  <div style="width:24px;height:24px;border-radius:50%;background:var(--stone-2);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--ink-3);flex-shrink:0">2</div>
+                  <div><div style="font-size:.85rem;font-weight:500">Quantum QSVC</div><div style="font-size:.75rem;color:var(--ink-3)">IBM Qiskit kernel</div></div>
+                  <div style="margin-left:auto" id="s1-status"></div>
+                </div>
+                <div class="pipeline-stage" id="stage-2" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--stone-2)">
+                  <div style="width:24px;height:24px;border-radius:50%;background:var(--stone-2);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--ink-3);flex-shrink:0">3</div>
+                  <div><div style="font-size:.85rem;font-weight:500">SHAP / LIME</div><div style="font-size:.75rem;color:var(--ink-3)">Explainability layer</div></div>
+                  <div style="margin-left:auto" id="s2-status"></div>
+                </div>
+                <div class="pipeline-stage" id="stage-3" style="display:flex;align-items:center;gap:10px;padding:8px 0">
+                  <div style="width:24px;height:24px;border-radius:50%;background:var(--stone-2);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--ink-3);flex-shrink:0">4</div>
+                  <div><div style="font-size:.85rem;font-weight:500">Recommendations</div><div style="font-size:.75rem;color:var(--ink-3)">Care plan generation</div></div>
+                  <div style="margin-left:auto" id="s3-status"></div>
+                </div>
+              </div>
+            </div>
+            <div class="card" id="quick-tips">
+              <div class="section-title" style="margin-bottom:.75rem">Clinical reference</div>
+              <div style="font-size:.78rem;color:var(--ink-3);line-height:1.7">
+                <div style="margin-bottom:6px"><strong style="color:var(--ink-2)">Glucose</strong> — Fasting &lt;100 normal, 100–125 prediabetic, ≥126 diabetic</div>
+                <div style="margin-bottom:6px"><strong style="color:var(--ink-2)">BMI</strong> — &lt;18.5 underweight, 18.5–24.9 normal, 25–29.9 overweight, ≥30 obese</div>
+                <div><strong style="color:var(--ink-2)">BP</strong> — Stage 1 HTN: ≥130/80; Stage 2: ≥140/90</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATIENTS TAB -->
+      <div id="dashtab-patients" style="display:none">
+        <div class="section-head">
+          <div><div class="page-title">Patient list</div><div class="page-sub">All registered patients</div></div>
+          <input class="form-input" style="width:220px" placeholder="Search patients...">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>ID</th><th>Age</th><th>Last prediction</th><th>Risk level</th><th>Status</th><th></th></tr></thead>
+            <tbody id="patient-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- QUANTUM LOG TAB -->
+      <div id="dashtab-quantum" style="display:none">
+        <div class="page-title" style="margin-bottom:.5rem">Quantum execution log</div>
+        <p class="page-sub" style="margin-bottom:1.5rem">IBM Qiskit job history and circuit benchmarks</p>
+        <div class="grid-3" style="margin-bottom:1.5rem">
+          <div class="metric-card"><div class="metric-lbl">Total jobs</div><div class="metric-val">247</div></div>
+          <div class="metric-card"><div class="metric-lbl">Avg qubits used</div><div class="metric-val">4.2</div></div>
+          <div class="metric-card"><div class="metric-lbl">Quantum advantage</div><div class="metric-val" style="color:var(--teal)">+3.1%</div><div class="metric-sub">accuracy over classical</div></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Job ID</th><th>Model</th><th>Qubits</th><th>Status</th><th>Classical acc.</th><th>Quantum acc.</th><th>Advantage</th></tr></thead>
+            <tbody id="quantum-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS PAGE -->
+<div id="screen-results" class="screen">
+  <nav>
+    <div class="nav-logo" onclick="go('landing')">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#0B5E56" stroke-width="1.5"/><circle cx="11" cy="7" r="2" fill="#0B5E56"/><circle cx="7" cy="15" r="2" fill="#0B5E56"/><circle cx="15" cy="15" r="2" fill="#0B5E56"/><line x1="11" y1="9" x2="7" y2="13" stroke="#C49A2C" stroke-width="1.2"/><line x1="11" y1="9" x2="15" y2="13" stroke="#C49A2C" stroke-width="1.2"/></svg>
+      QMedAI
+    </div>
+    <div class="nav-links">
+      <button class="btn btn-ghost btn-sm" onclick="go('doctor')">← Back to dashboard</button>
+    </div>
+  </nav>
+  <div class="page-wrap">
+    <div class="result-hero">
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:.5rem">Prediction ID: QM-2024-0847</div>
+      <div class="result-condition" id="res-condition">Type 2 Diabetes Risk</div>
+      <div class="result-sub">Analysed via quantum-classical hybrid pipeline · Patient: Rahul Mehta · PAT-2024-001</div>
+      <div class="confidence-row">
+        <div class="conf-item">
+          <div class="conf-label">Classical confidence</div>
+          <div class="conf-val" id="res-classical-conf">72.4%</div>
+          <div class="conf-model">GBM Classifier</div>
+          <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" id="bar-classical" style="width:72%;background:#6B6760"></div></div>
+        </div>
+        <div class="conf-item">
+          <div class="conf-label">Quantum confidence</div>
+          <div class="conf-val" id="res-quantum-conf">78.9%</div>
+          <div class="conf-model">QSVC (4 qubits)</div>
+          <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" id="bar-quantum" style="width:79%;background:#C49A2C"></div></div>
+        </div>
+      </div>
+      <div class="quantum-badge">⟨⟩ Quantum augmented · IBM Qiskit QSVC · 4 qubits · ZZFeatureMap</div>
+    </div>
+
+    <div class="tab-row">
+      <div class="tab-btn active" onclick="setResultTab('explain',this)">SHAP Explanation</div>
+      <div class="tab-btn" onclick="setResultTab('lime',this)">LIME Rules</div>
+      <div class="tab-btn" onclick="setResultTab('care',this)">Care plan</div>
+      <div class="tab-btn" onclick="setResultTab('patient-view',this)">Patient view</div>
+    </div>
+
+    <!-- SHAP TAB -->
+    <div id="restab-explain">
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:1.25rem">Feature importance (SHAP values)</div>
+          <div id="shap-bars"></div>
+        </div>
+        <div class="card">
+          <div class="section-title" style="margin-bottom:1rem">Key risk drivers</div>
+          <div style="font-size:.83rem;color:var(--ink-2);line-height:1.7;margin-bottom:1rem">The prediction is most strongly influenced by the patient's fasting glucose level, which at 138 mg/dL is significantly above the 126 mg/dL diabetic threshold. This single feature accounts for 34% of the model's confidence.</div>
+          <div style="background:var(--amber-light);border-left:3px solid var(--amber-warn);padding:.875rem 1rem;border-radius:0 var(--radius) var(--radius) 0;font-size:.82rem;color:var(--ink-2)">
+            <strong>Quantum uplift:</strong> The QSVC kernel identified a non-linear interaction between BMI and glucose that the classical model partially missed, contributing +6.5% confidence uplift.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIME TAB -->
+    <div id="restab-lime" style="display:none">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:1rem">LIME local explanation rules</div>
+        <div id="lime-rules"></div>
+      </div>
+    </div>
+
+    <!-- CARE TAB -->
+    <div id="restab-care" style="display:none">
+      <div style="margin-bottom:1rem;display:flex;align-items:center;gap:10px">
+        <span class="tag tag-brick">Urgent</span>
+        <span style="font-size:.82rem;color:var(--ink-3)">Recommended follow-up within 2 weeks</span>
+      </div>
+      <div class="rec-grid">
+        <div class="rec-card"><div class="rec-icon" style="background:var(--teal-light)">🥗</div><div class="rec-title">Diet</div><div class="rec-body">Reduce refined carbohydrates and added sugars. Target &lt;45% of calories from carbs. Increase fibre intake to 25–30g/day. Avoid sugary beverages.</div></div>
+        <div class="rec-card"><div class="rec-icon" style="background:var(--gold-light)">🏃</div><div class="rec-title">Exercise</div><div class="rec-body">150 min/week of moderate aerobic activity (brisk walking, cycling). Add 2 resistance training sessions per week to improve insulin sensitivity.</div></div>
+        <div class="rec-card"><div class="rec-icon" style="background:var(--teal-light)">🌙</div><div class="rec-title">Lifestyle</div><div class="rec-body">Target 7–8 hours of sleep nightly. Stress management via mindfulness or yoga. Avoid smoking — current status as "Former" is positive; maintain abstinence.</div></div>
+        <div class="rec-card"><div class="rec-icon" style="background:var(--brick-light)">🏥</div><div class="rec-title">Follow-up</div><div class="rec-body">HbA1c retest in 3 months. Refer to endocrinology if HbA1c ≥7% at follow-up. Begin metformin discussion if lifestyle changes insufficient after 3 months.</div></div>
+      </div>
+    </div>
+
+    <!-- PATIENT VIEW TAB -->
+    <div id="restab-patient-view" style="display:none">
+      <div class="card" style="max-width:560px">
+        <div style="font-family:var(--ff-display);font-size:1.2rem;font-weight:400;margin-bottom:.5rem">Your health assessment</div>
+        <div style="font-size:.85rem;color:var(--ink-3);margin-bottom:1.5rem">This is a plain-language summary of your results</div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:.75rem;font-weight:500;color:var(--ink-3);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em">Your risk level</div>
+          <div class="risk-meter"><div class="risk-needle" style="left:68%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink-3);margin-top:4px"><span>Low</span><span>Moderate</span><span>High</span></div>
+        </div>
+        <div style="font-size:.9rem;color:var(--ink-2);line-height:1.7;margin-bottom:1.25rem">Your results show an <strong>elevated risk for Type 2 Diabetes</strong>. Your blood sugar level was higher than the healthy range, and your BMI suggests some extra weight is putting stress on how your body processes sugar.</div>
+        <div style="font-size:.9rem;color:var(--ink-2);line-height:1.7;margin-bottom:1.25rem">The good news: Type 2 diabetes risk can be significantly reduced through diet and exercise changes, especially at this stage.</div>
+        <div style="background:var(--teal-light);border-radius:var(--radius);padding:1rem">
+          <div style="font-weight:500;font-size:.875rem;color:var(--teal);margin-bottom:.5rem">Your 3 action steps</div>
+          <div style="font-size:.82rem;color:var(--ink-2);line-height:1.8">1. Cut back on sugary foods and drinks<br>2. Walk 30 minutes a day, 5 days a week<br>3. Book a follow-up blood test in 3 months</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT PORTAL -->
+<div id="screen-patient" class="screen">
+  <nav>
+    <div class="nav-logo" onclick="go('landing')">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#0B5E56" stroke-width="1.5"/><circle cx="11" cy="7" r="2" fill="#0B5E56"/><circle cx="7" cy="15" r="2" fill="#0B5E56"/><circle cx="15" cy="15" r="2" fill="#0B5E56"/><line x1="11" y1="9" x2="7" y2="13" stroke="#C49A2C" stroke-width="1.2"/><line x1="11" y1="9" x2="15" y2="13" stroke="#C49A2C" stroke-width="1.2"/></svg>
+      QMedAI
+    </div>
+    <div class="nav-links">
+      <span class="nav-link">Rahul Mehta</span>
+      <span class="tag tag-gold">Patient</span>
+      <button class="btn btn-ghost btn-sm" onclick="go('landing')">Sign out</button>
+    </div>
+  </nav>
+  <div class="page-wrap">
+    <div style="margin-bottom:1.75rem">
+      <div class="page-title">Hello, Rahul</div>
+      <div class="page-sub">Your latest health assessment is below</div>
+    </div>
+    <div class="grid-2" style="margin-bottom:1.5rem">
+      <div class="card">
+        <div style="font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:.5rem">Your risk level</div>
+        <div style="font-family:var(--ff-display);font-size:1.4rem;font-weight:400;color:var(--brick);margin-bottom:.75rem">Elevated — Type 2 Diabetes Risk</div>
+        <div class="risk-meter"><div class="risk-needle" style="left:68%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink-3);margin-top:4px;margin-bottom:1rem"><span>Low</span><span>Moderate</span><span>High</span></div>
+        <div style="font-size:.83rem;color:var(--ink-2);line-height:1.65">Your blood sugar was above the healthy range. With some lifestyle changes, this risk can improve significantly over the next 3–6 months.</div>
+      </div>
+      <div class="card">
+        <div style="font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:1rem">Your metrics</div>
+        <div id="patient-metrics"></div>
+      </div>
+    </div>
+    <div class="section-title" style="margin-bottom:1rem">Your care plan</div>
+    <div class="rec-grid">
+      <div class="rec-card"><div class="rec-icon" style="background:var(--teal-light)">🥗</div><div class="rec-title">Eat</div><div class="rec-body">Reduce sugary and processed foods. Eat more vegetables, whole grains, and lean protein. Drink water instead of sweetened drinks.</div></div>
+      <div class="rec-card"><div class="rec-icon" style="background:var(--gold-light)">🚶</div><div class="rec-title">Move</div><div class="rec-body">Try to walk for 30 minutes each day. Even short walks after meals can help lower blood sugar. Any movement counts.</div></div>
+      <div class="rec-card"><div class="rec-icon" style="background:var(--teal-light)">😴</div><div class="rec-title">Rest</div><div class="rec-body">Aim for 7–8 hours of sleep each night. Poor sleep raises blood sugar. Try to keep a regular sleep schedule.</div></div>
+      <div class="rec-card" style="border-left:3px solid var(--brick)"><div class="rec-icon" style="background:var(--brick-light)">📅</div><div class="rec-title">Follow-up</div><div class="rec-body"><strong style="color:var(--brick)">Book a blood test in 3 months.</strong> Your doctor wants to check your HbA1c again to see how the changes are working.</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-head"><span class="section-title">Your history</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Assessment</th><th>Risk</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>28 Jun 2026</td><td>Type 2 Diabetes Risk</td><td><span class="tag tag-brick">Elevated</span></td><td><button class="btn btn-ghost btn-sm" onclick="go('results')">View</button></td></tr>
+          <tr><td>15 Mar 2026</td><td>Pre-hypertension Screen</td><td><span class="tag tag-amber">Moderate</span></td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+          <tr><td>02 Nov 2025</td><td>General Metabolic Panel</td><td><span class="tag tag-low">Low</span></td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentRole = 'doctor';
+let loginRole = 'doctor';
+let activeCharts = {};
+
+function go(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  if (screen === 'doctor') initDoctorDash();
+  if (screen === 'results') initResults();
+  if (screen === 'patient') initPatient();
+}
+
+function setRole(r) { loginRole = r; }
+
+function selectRole(r, prefix) {
+  loginRole = r;
+  const p = prefix ? 'r' : '';
+  document.getElementById((p?'rtab-':'tab-')+'doctor').classList.toggle('active', r==='doctor');
+  document.getElementById((p?'rtab-':'tab-')+'patient').classList.toggle('active', r==='patient');
+}
+
+function doLogin() {
+  const e = document.getElementById('login-email').value;
+  if (!e) { showToast('Enter your email to continue'); return; }
+  showToast('Signed in successfully');
+  setTimeout(() => go(loginRole === 'patient' ? 'patient' : 'doctor'), 400);
+}
+
+function doRegister() {
+  showToast('Account created — signing you in');
+  setTimeout(() => go(loginRole === 'patient' ? 'patient' : 'doctor'), 600);
+}
+
+function showToast(msg, dur=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function setDashTab(tab, el) {
+  document.querySelectorAll('[id^="dashtab-"]').forEach(d => d.style.display = 'none');
+  document.getElementById('dashtab-' + tab).style.display = 'block';
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if (tab === 'quantum') initQuantumTable();
+}
+
+function setResultTab(tab, el) {
+  document.querySelectorAll('[id^="restab-"]').forEach(d => d.style.display = 'none');
+  document.getElementById('restab-' + tab).style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+const mockPatients = [
+  {name:'Rahul Mehta',id:'PAT-001',age:48,condition:'Type 2 Diabetes Risk',conf:'78.9',model:'QSVC',risk:'high',date:'28 Jun'},
+  {name:'Ananya Iyer',id:'PAT-002',age:52,condition:'Hypertension Stage 1',conf:'82.1',model:'GBM',risk:'moderate',date:'27 Jun'},
+  {name:'Vikram Singh',id:'PAT-003',age:35,condition:'Pre-diabetic Screen',conf:'65.3',model:'VQC',risk:'moderate',date:'26 Jun'},
+  {name:'Meera Krishnan',id:'PAT-004',age:61,condition:'Cardiovascular Risk',conf:'71.8',model:'QSVC',risk:'high',date:'25 Jun'},
+  {name:'Arjun Patel',id:'PAT-005',age:29,condition:'Metabolic Panel — Normal',conf:'91.2',model:'GBM',risk:'low',date:'24 Jun'},
+];
+
+const riskTag = {high:'tag-brick',moderate:'tag-amber',low:'tag-low'};
+const riskLabel = {high:'High',moderate:'Moderate',low:'Low'};
+const modelTag = {QSVC:'tag-gold',VQC:'tag-gold',GBM:'tag-teal'};
+
+function initDoctorDash() {
+  animateCounter('m-total', 0, 247, 800);
+  animateCounter('m-quantum', 0, 89, 900);
+  animateCounter('m-risk', 0, 31, 700);
+  setTimeout(() => document.getElementById('m-conf').textContent = '77.4%', 600);
+
+  const tbody = document.getElementById('recent-table');
+  if(tbody && !tbody.innerHTML) tbody.innerHTML = mockPatients.map(p =>
+    `<tr><td><strong>${p.name}</strong></td><td>${p.condition}</td><td>${p.conf}%</td>
+    <td><span class="tag ${modelTag[p.model]}">${p.model}</span></td>
+    <td><span class="tag ${riskTag[p.risk]}">${riskLabel[p.risk]}</span></td>
+    <td>${p.date}</td>
+    <td><button class="btn btn-ghost btn-sm" onclick="go('results')">View</button></td></tr>`
+  ).join('');
+
+  const ptbody = document.getElementById('patient-table');
+  if(ptbody && !ptbody.innerHTML) ptbody.innerHTML = mockPatients.map(p =>
+    `<tr><td><strong>${p.name}</strong></td><td style="color:var(--ink-3)">${p.id}</td><td>${p.age}</td>
+    <td>${p.date}</td><td><span class="tag ${riskTag[p.risk]}">${riskLabel[p.risk]}</span></td>
+    <td><span class="tag tag-teal">Active</span></td>
+    <td><button class="btn btn-ghost btn-sm" onclick="go('results')">History</button></td></tr>`
+  ).join('');
+
+  initCharts();
+}
+
+function animateCounter(id, from, to, dur) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  const start = Date.now();
+  const step = () => {
+    const p = Math.min((Date.now()-start)/dur, 1);
+    el.textContent = Math.round(from + (to-from)*p);
+    if(p<1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function initCharts() {
+  if(activeCharts['volume']) { activeCharts['volume'].destroy(); }
+  if(activeCharts['model']) { activeCharts['model'].destroy(); }
+
+  const vc = document.getElementById('chart-volume');
+  if(vc) activeCharts['volume'] = new Chart(vc, {
+    type:'line',
+    data:{
+      labels:['1 Jun','5 Jun','10 Jun','15 Jun','20 Jun','25 Jun','30 Jun'],
+      datasets:[
+        {label:'Classical',data:[8,12,10,15,18,14,20],borderColor:'#0B5E56',backgroundColor:'rgba(11,94,86,.08)',borderWidth:2,tension:.3,pointRadius:3,fill:true},
+        {label:'Quantum',data:[3,5,6,8,10,9,12],borderColor:'#C49A2C',backgroundColor:'rgba(196,154,44,.06)',borderWidth:2,tension:.3,pointRadius:3,fill:true}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'#EDE9E3'},ticks:{font:{size:10}}}}}
+  });
+
+  const mc = document.getElementById('chart-model');
+  if(mc) activeCharts['model'] = new Chart(mc, {
+    type:'doughnut',
+    data:{
+      labels:['Classical GBM','Quantum QSVC','Quantum VQC'],
+      datasets:[{data:[58,31,11],backgroundColor:['#0B5E56','#C49A2C','#9B3A2A'],borderWidth:2,borderColor:'#fff'}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}
+  });
+}
+
+function initQuantumTable() {
+  const jobs = [
+    {id:'QJ-0847',model:'QSVC',qubits:4,status:'completed',cl:'72.4',q:'78.9',adv:'+6.5'},
+    {id:'QJ-0846',model:'VQC',qubits:6,status:'completed',cl:'68.1',q:'71.2',adv:'+3.1'},
+    {id:'QJ-0845',model:'QSVC',qubits:4,status:'completed',cl:'81.3',q:'83.8',adv:'+2.5'},
+    {id:'QJ-0844',model:'VQC',qubits:8,status:'failed',cl:'70.0',q:'—',adv:'—'},
+    {id:'QJ-0843',model:'QSVC',qubits:4,status:'completed',cl:'65.9',q:'69.4',adv:'+3.5'},
+  ];
+  const stTag = {completed:'tag-teal',failed:'tag-brick',running:'tag-amber'};
+  document.getElementById('quantum-table').innerHTML = jobs.map(j =>
+    `<tr><td style="font-family:monospace;font-size:.78rem">${j.id}</td>
+    <td><span class="tag tag-gold">${j.model}</span></td>
+    <td>${j.qubits}</td>
+    <td><span class="tag ${stTag[j.status]}">${j.status}</span></td>
+    <td>${j.cl}%</td><td>${j.q !== '—' ? j.q+'%' : '—'}</td>
+    <td style="color:var(--teal);font-weight:500">${j.adv}</td></tr>`
+  ).join('');
+}
+
+let predicting = false;
+function runPrediction() {
+  if(predicting) return;
+  const age = document.getElementById('f-age').value;
+  if(!age) { showToast('Fill in at least the patient age'); return; }
+  predicting = true;
+  const btn = document.getElementById('run-btn');
+  btn.textContent = 'Running pipeline…';
+  btn.disabled = true;
+
+  const stages = ['s0','s1','s2','s3'];
+  const labels = ['Classical ML complete','Quantum QSVC complete','SHAP analysis complete','Care plan ready'];
+  let i = 0;
+  const tick = setInterval(() => {
+    if(i>0) document.getElementById(stages[i-1]+'-status').innerHTML = '<span class="tag tag-low">✓</span>';
+    if(i < stages.length) {
+      document.getElementById(stages[i]+'-status').innerHTML = '<span style="font-size:.75rem;color:var(--amber-warn)">Running…</span>';
+    }
+    i++;
+    if(i > stages.length) {
+      clearInterval(tick);
+      predicting = false;
+      btn.textContent = 'Run quantum-assisted diagnosis';
+      btn.disabled = false;
+      showToast('Diagnosis complete — view results');
+      setTimeout(() => go('results'), 800);
+    }
+  }, 900);
+}
+
+function initResults() {
+  const shap = [
+    {label:'Glucose level',val:.34,col:'#9B3A2A'},
+    {label:'BMI',val:.22,col:'#C49A2C'},
+    {label:'Age',val:.18,col:'#0B5E56'},
+    {label:'Systolic BP',val:.12,col:'#0B5E56'},
+    {label:'HbA1c',val:.09,col:'#C49A2C'},
+    {label:'Smoking',val:.05,col:'#6B6760'},
+  ];
+  const c = document.getElementById('shap-bars');
+  if(c) c.innerHTML = shap.map(s =>
+    `<div class="shap-bar">
+      <div class="shap-label">${s.label}</div>
+      <div class="shap-track"><div class="shap-fill" style="width:${Math.round(s.val*100)}%;background:${s.col}"></div></div>
+      <div class="shap-val">${Math.round(s.val*100)}%</div>
+    </div>`
+  ).join('');
+
+  const limeRules = [
+    {rule:'Glucose ≥ 126 mg/dL',dir:'increases',weight:.34},
+    {rule:'BMI ≥ 27.5',dir:'increases',weight:.22},
+    {rule:'Age ≥ 45',dir:'increases',weight:.18},
+    {rule:'Systolic BP ≥ 130',dir:'increases',weight:.12},
+    {rule:'No current smoking',dir:'decreases',weight:.08},
+  ];
+  const lr = document.getElementById('lime-rules');
+  if(lr) lr.innerHTML = limeRules.map(r =>
+    `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--stone-2)">
+      <span class="tag ${r.dir==='increases'?'tag-brick':'tag-low'}">${r.dir==='increases'?'↑ risk':'↓ risk'}</span>
+      <span style="font-size:.875rem;color:var(--ink-2);flex:1">${r.rule}</span>
+      <span style="font-size:.78rem;color:var(--ink-3)">weight: ${Math.round(r.weight*100)}%</span>
+    </div>`
+  ).join('');
+}
+
+function initPatient() {
+  const metrics = [
+    {label:'Blood glucose',val:'138 mg/dL',status:'high',note:'Above normal'},
+    {label:'BMI',val:'28.4',status:'moderate',note:'Slightly above normal'},
+    {label:'Blood pressure',val:'132/84 mmHg',status:'moderate',note:'Stage 1 hypertension'},
+    {label:'HbA1c',val:'6.2%',status:'moderate',note:'Pre-diabetic range'},
+  ];
+  const sc = {high:'tag-brick',moderate:'tag-amber',normal:'tag-low'};
+  document.getElementById('patient-metrics').innerHTML = metrics.map(m =>
+    `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--stone-2)">
+      <span style="font-size:.83rem;color:var(--ink-3);flex:1">${m.label}</span>
+      <span style="font-size:.875rem;font-weight:500;color:var(--ink)">${m.val}</span>
+      <span class="tag ${sc[m.status]}" style="font-size:.68rem">${m.note}</span>
+    </div>`
+  ).join('');
+}
+
+window.onload = () => {
+  go('landing');
+};
+</script>
+</body>
+</html>
